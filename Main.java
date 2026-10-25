@@ -279,6 +279,27 @@ public class Main {
 
 
 
+    // Mostrar todas las fechas en las que se ha modificado el fichero
+    public static void mostrarTodasFechModificacion() throws Exception {
+
+        System.out.println("\n========== MOSTRANDO LAS FECHAS DE MODIFICACIONES ==========");
+        try(RandomAccessFile raf = new RandomAccessFile(ficheroActual, "r")) {
+            long posPie = Cabecera.LEN_LINE + (99L * Cuerpo.LEN_LINE);
+            long longFechasModificaciones = ficheroActual.length() - posPie;
+
+            long numFechasModificaciones = longFechasModificaciones / Pie.LEN_LINE;
+            for(long i = 0; i < numFechasModificaciones; i++) {
+                long pos = (posPie + Pie.LEN_NOMBRE_AUTOR_MODIFICO + 1L) + (Pie.LEN_LINE * i);
+
+                raf.seek(pos);
+                byte[] buf = new byte[Pie.LEN_FECHA_MODIFICACION];
+                raf.readFully(buf);
+                System.out.println(new String(buf, "UTF-8").trim());
+            }
+        }
+    }
+
+
 
     public static void main(String[] args) {
 
@@ -400,6 +421,18 @@ public class Main {
                         e.printStackTrace();
                     }
                     break;
+
+
+
+                case 9:
+                    try {
+                        mostrarTodasFechModificacion();
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
+
 
 
                 case 10:
