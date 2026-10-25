@@ -153,7 +153,7 @@ public class Main {
 
 
         if(ficheros.length != 0 && ficheros != null) {
-            System.out.println("==== FICHEROS ====");
+            System.out.println("\n==== FICHEROS ====");
             for (int i = 0; i < ficheros.length; i++)
                 System.out.println(i + ". " + ficheros[i].getName());
             System.out.print("\nElige el id del fichero con el cual quiere trabajar :  ");
@@ -166,9 +166,40 @@ public class Main {
     }
 
 
+
+
+
+
+
+
     // mostrar todos los registros que se hayan insertado
     public static void mostrarTodosRegistros() throws Exception {
-        
+
+        try(RandomAccessFile raf = new RandomAccessFile(ficheroActual, "r")) {
+            // Leer el numero de registros
+            raf.seek(posNumRegistros);
+            byte[] buf = new byte[Cabecera.LEN_NUMERO_REGISTROS];
+            raf.readFully(buf);
+            long numeroRegistros = Long.parseLong(new String(buf, "UTF-8").trim());
+
+            // Calcular la posicion inicial y final de los registros
+            long posInicioRegistro = Cabecera.LEN_LINE;
+            long posFinalRegistro =  Cabecera.LEN_LINE + (numeroRegistros * Cuerpo.LEN_LINE);
+
+            // Leer los registros
+            System.out.println("\n========== MOSTRANDO LOS REGISTROS ==========");
+            System.out.println("====== " + numeroRegistros + " REGISTROS ======");
+            for(long i = 0; i < numeroRegistros; i++) {
+                long pos = posInicioRegistro + (Cuerpo.LEN_LINE * i);
+
+                raf.seek(pos);
+                byte[] buffer = new byte[Cuerpo.LEN_DNI];
+                raf.readFully(buffer);
+
+                System.out.println(new String(buffer, "UTF-8"));
+            }
+
+        }
     }
 
 
@@ -255,6 +286,16 @@ public class Main {
                 case 5:
                     try {
                         insertarRegistroUltimaPosicion(ficheroActual);
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
+
+
+                case 6:
+                    try {
+                        mostrarTodosRegistros();
                     }catch(Exception e) {
                         e.printStackTrace();
                     }
