@@ -19,7 +19,7 @@ public class Fichero {
             System.out.println("\nEl fichero ha sido creado  :  " + fichCreado);
 
         }else
-            System.out.println("El fichero ya existe !!");
+            System.out.println("\nEl fichero ya existe !!");
 
         return fichero;
     }
@@ -36,4 +36,18 @@ public class Fichero {
     public static boolean ficheroValido(File fichero) {
         return fichero.exists() && fichero.isFile() && fichero.canRead() && fichero.canWrite();
     }
+
+
+
+    // Eliminar un fichero
+    public static void eliminarFichero(File fichero) {
+
+        if(fichero.exists()) {
+            boolean fichEliminado = fichero.delete();
+            System.out.println("\nEl fichero se ha eliminado  :  " + fichEliminado);
+        }else
+            System.out.println("\nEste fichero no existe!");
+    }
+
+
 }

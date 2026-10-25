@@ -10,8 +10,8 @@ public class Main {
     static Scanner numero = new Scanner(System.in);
     static Scanner texto = new Scanner(System.in);
     static File directorio = new File("EJE3_Z2467351P\\FILES");
-    static LinkedList<String> ficherosCreados = new LinkedList<>();
 
+    static long posNumRegistros = Cabecera.getPosicionNumeroRegistro();
     static File ficheroActual = null;
 
 
@@ -19,8 +19,6 @@ public class Main {
 
     // CASE 1: Crear fichero nuevo
     public static void crearFicheroNuevo(String nomFichero) {
-
-
 
         Cabecera cabecera = new Cabecera(0);
         Pie pie = new Pie();
@@ -33,7 +31,7 @@ public class Main {
             try(RandomAccessFile raf = new RandomAccessFile(fichero, "rw")) {
 
                 if(fichero.length() != 0)
-                    System.out.println("Este fichero ya existe !!");
+                    System.out.println("\nEste fichero ya existe !!");
 
 
                 else {
@@ -41,12 +39,21 @@ public class Main {
                     // Escribir la cabecera dentro del fichero
                     raf.write(cabecera.toFich().getBytes("UTF-8"));
 
+
+                    // Escribir 99 dni vacíos
+                    long i = 0L;
+                    StringBuilder sb = new StringBuilder();
+                    while(i < 99L) {
+                        sb.append(FormatoUtils.pad("", Cuerpo.LEN_DNI)).append("\n");
+                        i++;
+                    }
+                    raf.write(sb.toString().getBytes("UTF-8"));
+
+
                     // Escribir el pie dentro del fichero
                     raf.write(pie.toFich().getBytes("UTF-8"));
 
 
-                    // Anadir el nombre del fichero en la lista de los ficheros creados
-                    ficherosCreados.add(nomFichero);
                 }
             }catch(Exception e) {
                 e.printStackTrace();
@@ -76,32 +83,39 @@ public class Main {
 
 
         try(RandomAccessFile raf = new RandomAccessFile(fichero, "rw")) {
-            // Primero hay que leer cuantos registros hay
-            int posNumRegistros = Cabecera.LEN_NOMBRE_AUTOR + 1 + Cabecera.LEN_FECHA_CREACION + 1;
 
+            // Leer numero de los registros
             raf.seek(posNumRegistros);
             byte[] buf = new byte[Cabecera.LEN_NUMERO_REGISTROS];
             raf.readFully(buf);
 
-            int numeroRegistros = Integer.parseInt(new String(buf, "UTF-8").trim());
+            long numeroRegistros = Long.parseLong(new String(buf, "UTF-8").trim());
 
 
             // Posicionar en la última posición
-            Long posicionFinal = (long) (Cabecera.LEN_LINE + (numeroRegistros * Cuerpo.LEN_LINE));
+            long posicionFinal = (long) (Cabecera.LEN_LINE + (numeroRegistros * Cuerpo.LEN_LINE));
 
             raf.seek(posicionFinal);
-
+            // Escribir los registros en el fichero
             for(Cuerpo r : registros) {
                 raf.write(r.toFich().getBytes("UTF-8"));
             }
 
 
             // Modificar el número de registros
+            long numeroRegistrosActual = numeroRegistros + (long) (registros.size());
+
+            String s = FormatoUtils.pad(String.valueOf(numeroRegistrosActual), Cabecera.LEN_NUMERO_REGISTROS);
             raf.seek(posNumRegistros);
-            // Código . . .
+
+            raf.write(s.getBytes("UTF-8"));
+
+
+            // Apuntar la modificación en el pie de la página
+            raf.seek(fichero.length());
+            raf.write(new Pie().toFich().getBytes("UTF-8"));
 
         }
-
     }
 
 
@@ -114,6 +128,8 @@ public class Main {
         LinkedList<Cuerpo> registros = new LinkedList<>();
         // Crear los registros
         String dni = "";
+
+        System.out.println();
         do {
             System.out.print("Inserta el dni  ('salir' para terminar):  ");
             dni = texto.nextLine();
@@ -127,16 +143,26 @@ public class Main {
 
 
 
-    public static String eligirFichero() {
+
+
+
+
+    public static File eligirFichero() {
         // Elige un fichero de los ficheros creados
+        File[] ficheros = directorio.listFiles();
 
-        for(int i = 0; i < ficherosCreados.size(); i++)
-            System.out.println(i + " " + ficherosCreados.get(i));
 
-        System.out.print("\nIntroduce el numero del fichero  :  ");
-        int idFichero = numero.nextInt();
+        if(ficheros.length != 0 && ficheros != null) {
+            System.out.println("==== FICHEROS ====");
+            for (int i = 0; i < ficheros.length; i++)
+                System.out.println(i + ". " + ficheros[i].getName());
+            System.out.print("\nElige el id del fichero con el cual quiere trabajar :  ");
+            int idFichero = numero.nextInt();
+            return ficheros[idFichero];
+        }
 
-        return ficherosCreados.get(idFichero);
+
+        return null;
     }
 
 
@@ -154,22 +180,21 @@ public class Main {
 
 
 
-
-
     public static void main(String[] args) {
 
 
         int op = -1;
-        String menu = "===================== MENU PRINCIPAL =====================\n" +
+        String menu = "\n===================== MENU PRINCIPAL =====================\n" +
                     "1. crear fichero nuevo.\n" +
-                    "2. fichero actual de trabajo.\n" +
-                    "3. cambiar fichero de trabajo.\n" +
-                    "4. insertar registros en la ultima posición libre disponible del fichero.\n" +
-                    "5. mostrar todos los registros que se han insertado.\n"  +
-                    "6. modificar un registro completo en función a un DNI.\n" +
-                    "7. mostrar el nombre del creador del fichero y mostrar el nombre de la ultima persona que modifico el fichero.\n" +
-                    "8. mostrar todas las fechas en las que se ha modificado el fichero.\n" +
-                    "9. salir.\n" +
+                    "2. eliminar un fichero.\n" +
+                    "3. fichero actual de trabajo.\n" +
+                    "4. eligir/cambiar fichero de trabajo.\n" +
+                    "5. insertar registros en la ultima posición libre disponible del fichero.\n" +
+                    "6. mostrar todos los registros que se han insertado.\n"  +
+                    "7. modificar un registro completo en función a un DNI.\n" +
+                    "8. mostrar el nombre del creador del fichero y mostrar el nombre de la ultima persona que modifico el fichero.\n" +
+                    "9. mostrar todas las fechas en las que se ha modificado el fichero.\n" +
+                    "10. salir.\n" +
                     "Elige una opción  :  ";
 
 
@@ -179,40 +204,73 @@ public class Main {
             System.out.print(menu);
             op = numero.nextInt();
 
+            // Al ejecutar de nuevo el programa hay que eligir un fichero para trabajar o crear uno
+            if(ficheroActual == null && op != 1)
+                op = 4;
 
             switch(op) {
 
                 case 1:
                     System.out.println("\n===== CREAR FICHERO NUEVO =====");
-                    System.out.println("Introduce el nombre del fichero que quiere crear.  (ejemplo : fichero.txt)  :  ");
+                    System.out.print("Introduce el nombre del fichero que quiere crear.  (ejemplo : fichero.txt)  :  ");
                     String nomFichero = texto.nextLine();
 
                     crearFicheroNuevo(nomFichero);
                     break;
 
 
+
                 case 2:
-                    System.out.println("El fichero activo es  :  " + ficheroActual);
-                    break;
+                    File fichero = eligirFichero();
+                    if(fichero == null)
+                        System.out.println("\nTodavía no hay ningún fichero!");
+                    else
+                        Fichero.eliminarFichero(fichero);
 
-
-                case 3:
-                    String fichero = eligirFichero();
-                    ficheroActual = new File(directorio, fichero);
-                    System.out.println("Hemos cambiado al fichero  :  " + fichero);
                     break;
 
 
 
                 case 3:
-                    File file = new File(directorio, ficherosCreados.get(eligirFichero()));
-
-
+                    if(ficheroActual == null)
+                        System.out.println("\nPRIMERO : elige el fichero con el cual quiera trabajar.");
+                    else
+                        System.out.println("El fichero activo es  :  " + ficheroActual.getName());
                     break;
 
+
+                case 4:
+                    File file = eligirFichero();
+
+                    if(file == null)
+                        System.out.println("\nTiene que crear un fichero porque todavía no hay.");
+                    else {
+                        ficheroActual = file;
+                        System.out.println("Hemos cambiado al fichero  :  " + file.getName());
+                    }
+                    break;
+
+
+
+                case 5:
+                    try {
+                        insertarRegistroUltimaPosicion(ficheroActual);
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
+
+
+                case 10:
+                    System.out.println("\nSaliendo del programa. . .");
+                    break;
+
+                default:
+                    System.out.println("Opción invalida !!");
             }
 
-        }while(op != 9);
+        }while(op != 10);
 
 
     }

@@ -37,12 +37,26 @@ public class Cabecera {
 
 
 
+
+
     // Cambiar el formato de la fecha
     public String formatoFecha(LocalDate fechaActual) {
         DateTimeFormatter formateada = DateTimeFormatter.ofPattern("ddMMyyyy");
 
         return fechaActual.format(formateada);
     }
+
+    // Calcular la posicion exacta del número de registros
+    public static long getPosicionNumeroRegistro() {
+        long posicion = LEN_NOMBRE_AUTOR + 1 + LEN_FECHA_CREACION + 1;
+        return posicion;
+    }
+
+
+
+
+
+
 
 
     // Getter Y Setter
