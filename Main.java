@@ -250,6 +250,35 @@ public class Main {
 
 
 
+    // Mostrar nombre del creador del fichero y de la última persona que modifico el fichero
+    public static void mostrarNombreCreador() throws Exception {
+        System.out.println("\n====== MOSTRANDO NOMBRE CREADOR Y LA ULTIMA PERSONA QUE MODIFICO EL FICHERO ======");
+
+         try(RandomAccessFile raf = new RandomAccessFile(ficheroActual, "r")) {
+             //Leer el nombre del creador
+             raf.seek(0);
+             byte[] buf = new byte[Cabecera.LEN_NOMBRE_AUTOR];
+             raf.readFully(buf);
+             String nombreCreador = new String(buf, "UTF-8").trim();
+
+
+             // Leer el nombre de la última persona que modifico el fichero
+             long posUltimaPersona = ficheroActual.length() - Pie.LEN_LINE;
+             raf.seek(posUltimaPersona);
+             buf = new byte[Pie.LEN_NOMBRE_AUTOR_MODIFICO];
+             raf.readFully(buf);
+             String nombreUltimaPersona = new String(buf, "UTF-8").trim();
+
+
+             System.out.println("Nombre del creador del fichero  :  " + nombreCreador);
+             System.out.println("Nombre la ultima persona que modifico el fichero  :  " + nombreUltimaPersona);
+         }
+    }
+
+
+
+
+
 
     public static void main(String[] args) {
 
@@ -359,6 +388,17 @@ public class Main {
                         e.printStackTrace();
                     }
 
+                    break;
+
+
+
+
+                case 8:
+                    try {
+                        mostrarNombreCreador();
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
 
 
