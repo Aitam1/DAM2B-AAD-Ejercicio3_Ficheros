@@ -205,6 +205,46 @@ public class Main {
 
 
 
+    // Modificar un registro completo en función a un DNI
+    public static boolean modificarRegistro(String dniAnterior, String dniNuevo) throws Exception {
+
+        try(RandomAccessFile raf = new RandomAccessFile(ficheroActual, "rw")) {
+            // Leer el numero de registros
+            raf.seek(posNumRegistros);
+            byte[] buf = new byte[Cabecera.LEN_NUMERO_REGISTROS];
+            raf.readFully(buf);
+            long numeroRegistros = Long.parseLong(new String(buf, "UTF-8").trim());
+
+            // Calcular la posicion inicial y final de los registros
+            long posInicioRegistro = Cabecera.LEN_LINE;
+            long posFinalRegistro =  Cabecera.LEN_LINE + (numeroRegistros * Cuerpo.LEN_LINE);
+
+
+            // Leer los registros
+            for(long i = 0; i < numeroRegistros; i++) {
+                long pos = posInicioRegistro + (Cuerpo.LEN_LINE * i);
+
+                raf.seek(pos);
+                byte[] buffer = new byte[Cuerpo.LEN_DNI];
+                raf.readFully(buffer);
+
+                String dni = new String(buffer, "UTF-8").trim();
+                // Verificar si existe el dni y modificarlo
+                if(dni.equalsIgnoreCase(dniAnterior)) {
+                    raf.seek(pos);
+                    String s = FormatoUtils.pad(dniNuevo, Cuerpo.LEN_DNI);
+                    raf.write(s.getBytes("UTF-8"));
+
+                    // Escribir la fecha de modificación
+                    raf.seek(ficheroActual.length());
+                    raf.write(new Pie().toFich().getBytes("UTF-8"));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
 
 
@@ -301,6 +341,25 @@ public class Main {
                     }
                     break;
 
+
+
+                case 7:
+                    System.out.println("\n==========MODIFICAR UN REGISTRO ==========");
+                    System.out.print("Inserta el DNI que desea modificar  :  ");
+                    String dniAnterior = texto.nextLine();
+                    System.out.print("Inserta el nuevo DNI  :  ");
+                    String dniNuevo = texto.nextLine();
+
+                    try {
+                        if(modificarRegistro(dniAnterior, dniNuevo))
+                            System.out.println("\nDNI encontrado y modificado.");
+                        else
+                            System.out.println("\nDNI no encontrado!!");
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
 
 
                 case 10:
