@@ -1,3 +1,5 @@
+package EJE3;
+
 import java.io.File;
 
 public class Fichero {
